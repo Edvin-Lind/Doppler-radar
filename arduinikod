@@ -1,0 +1,94 @@
+#include <Servo.h>
+
+Servo myservo;  // Create servo object
+
+// Define pin numbers
+const int trigPin1 = 9;
+const int echoPin1 = 10;
+const int trigPin2 = 11;
+const int echoPin2 = 12;
+
+// Initialize variables
+int pos = 0;
+float duration1, distance1;
+float duration2, distance2;
+float velocity;
+float oldDistance = 0;
+float newDistance = 0;
+int oldPos = 0;
+int newPos = 0;
+
+void setup() {
+  myservo.attach(4);  // Attach servo on pin 4 to servo object
+  pinMode(trigPin1, OUTPUT);  // Set trigPin1 as output
+  pinMode(echoPin1, INPUT);  // Set echoPin1 as input
+  pinMode(trigPin2, OUTPUT);  // Set trigPin2 as output
+  pinMode(echoPin2, INPUT);  // Set echoPin2 as input
+  Serial.begin(9600);  // Start serial communication at 9600 baud
+}
+
+void loop() {
+  for (pos = 0; pos <= 120; pos += 1) { 
+    myservo.write(pos);  // Move servo to position 'pos'
+    delay(15);  // Wait for 15ms
+
+    // Update sensor reading for each degree of servo rotation
+    updateSensorReading();
+
+    // Only calculate velocity if distance is less than or equal to 200
+    if (distance1 <= 200) {
+      oldDistance = newDistance;
+      newDistance = distance1;
+      oldPos = newPos;
+      newPos = pos;
+      velocity = (newDistance - oldDistance) / (newPos - oldPos);
+      Serial.print("Velocity: ");
+      Serial.println(velocity);
+    }
+  }
+
+  for (pos = 120; pos >= 0; pos -= 1) {
+    myservo.write(pos);  // Move servo to position 'pos'
+    delay(15);  // Wait for 15ms
+
+    // Update sensor reading for each degree of servo rotation
+    updateSensorReading();
+
+    // Only calculate velocity if distance is less than or equal to 200
+    if (distance1 <= 200) {
+      oldDistance = newDistance;
+      newDistance = distance1;
+      oldPos = newPos;
+      newPos = pos;
+      velocity = (newDistance - oldDistance) / (newPos - oldPos);
+      Serial.print("Velocity: ");
+      Serial.println(velocity);
+    }
+  }
+}
+
+void updateSensorReading() {
+  // Sensor 1
+  digitalWrite(trigPin1, LOW);  // Ensure trigPin1 is low
+  delayMicroseconds(2);  // Wait for 2 microseconds
+  digitalWrite(trigPin1, HIGH);  // Set trigPin1 high
+  delayMicroseconds(10);  // Wait for 10 microseconds
+  digitalWrite(trigPin1, LOW);  // Set trigPin1 low
+
+  duration1 = pulseIn(echoPin1, HIGH);  // Read echo time for sensor 1
+  distance1 = (duration1 * 0.0343) / 2;  // Calculate distance for sensor 1
+  Serial.print("Distance1: ");
+  Serial.println(distance1);
+
+  // Sensor 2
+  digitalWrite(trigPin2, LOW);  // Ensure trigPin2 is low
+  delayMicroseconds(2);  // Wait for 2 microseconds
+  digitalWrite(trigPin2, HIGH);  // Set trigPin2 high
+  delayMicroseconds(10);  // Wait for 10 microseconds
+  digitalWrite(trigPin2, LOW);  // Set trigPin2 low
+
+  duration2 = pulseIn(echoPin2, HIGH);  // Read echo time for sensor 2
+  distance2 = (duration2 * 0.0343) / 2;  // Calculate distance for sensor 2
+  Serial.print("Distance2: ");
+  Serial.println(distance2);
+}
